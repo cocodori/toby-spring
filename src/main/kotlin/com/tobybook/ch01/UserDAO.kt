@@ -4,9 +4,12 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
 
-abstract class UserDAO {
+class UserDAO(
+    private val connectionMaker: ConnectionMaker
+) {
+
     fun add(user: User) {
-        val c = getConnection()
+        val c = connectionMaker.makeConnection()
 
         val ps: PreparedStatement = c.prepareStatement(
             "insert into users(id, name, password) values(?, ?, ?)"
@@ -23,7 +26,7 @@ abstract class UserDAO {
     }
 
     fun get(id: String): User {
-        val c = getConnection()
+        val c = connectionMaker.makeConnection()
         val ps = c.prepareStatement("select * from users where id = ?")
         ps.setString(1, id)
 
@@ -42,6 +45,4 @@ abstract class UserDAO {
 
         return user
     }
-
-    abstract fun getConnection(): Connection
 }
