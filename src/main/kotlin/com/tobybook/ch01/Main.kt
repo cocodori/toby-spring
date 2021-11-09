@@ -3,7 +3,7 @@ package com.tobybook.ch01
 fun main() {
     val dao = UserDAO()
 
-    val user = User("hoon", "훈", "pwzz")
+    val user = User("Jay", "제이", "pwzz")
 
     dao.add(user)
 
@@ -14,5 +14,4 @@ fun main() {
     println(user2.name)
     println(user2.password)
     println("${user2.name} 조회 성공")
-
 }

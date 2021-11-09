@@ -1,12 +1,12 @@
 package com.tobybook.ch01
 
+import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
 
-class UserDAO {
+abstract class UserDAO {
     fun add(user: User) {
-        Class.forName("com.mysql.cj.jdbc.Driver")
-        val c = DriverManager.getConnection("jdbc:mysql://localhost:3306/toby", "root", "")
+        val c = getConnection()
 
         val ps: PreparedStatement = c.prepareStatement(
             "insert into users(id, name, password) values(?, ?, ?)"
@@ -23,8 +23,7 @@ class UserDAO {
     }
 
     fun get(id: String): User {
-        Class.forName("com.mysql.cj.jdbc.Driver")
-        val c = DriverManager.getConnection("jdbc:mysql://localhost:3306/toby", "root", "")
+        val c = getConnection()
         val ps = c.prepareStatement("select * from users where id = ?")
         ps.setString(1, id)
 
@@ -43,4 +42,6 @@ class UserDAO {
 
         return user
     }
+
+    abstract fun getConnection(): Connection
 }
