@@ -1,9 +1,9 @@
 package com.tobybook.ch01
 
 fun main() {
-    val dao = UserDAO(DConnectionMaker())
+    val dao = DaoFactory().userDAO()
 
-    val user = User("Jay", "제이", "pwzz")
+    val user = User("Hoon", "hoon", "pwzz")
 
     dao.add(user)
 
