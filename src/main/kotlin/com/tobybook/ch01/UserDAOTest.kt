@@ -1,9 +1,12 @@
 package com.tobybook.ch01
 
-fun main() {
-    val dao = DaoFactory().userDAO()
+import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
-    val user = User("Hoon", "hoon", "pwzz")
+fun main() {
+    val context = AnnotationConfigApplicationContext(DaoFactory::class.java)
+    val dao = context.getBean("userDAO", UserDAO::class.java)
+
+    val user = User("Ian", "Moon", "pwzz")
 
     dao.add(user)
 
