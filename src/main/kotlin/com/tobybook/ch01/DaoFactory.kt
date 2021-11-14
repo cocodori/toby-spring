@@ -5,8 +5,8 @@ import org.springframework.context.annotation.Configuration
 
 @Configuration
 class DaoFactory {
-    @Bean
-    fun userDAO(): UserDAO = UserDAO(getConnectionMaker())
+//    @Bean
+//    fun userDAO(): UserDAO = UserDAO(getConnectionMaker(),)
 
     fun accountDAO(): AccountDAO = AccountDAO(getConnectionMaker())
 

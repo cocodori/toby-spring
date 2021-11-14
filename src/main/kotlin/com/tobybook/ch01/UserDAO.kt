@@ -4,9 +4,10 @@ import java.sql.Connection
 import java.sql.DriverManager
 import java.sql.PreparedStatement
 
-class UserDAO(
-    private val connectionMaker: ConnectionMaker
-) {
+class UserDAO{
+    lateinit var connectionMaker: ConnectionMaker
+    lateinit var c: Connection
+    lateinit var user: User
 
     fun add(user: User) {
         val c = connectionMaker.makeConnection()
@@ -26,8 +27,9 @@ class UserDAO(
     }
 
     fun get(id: String): User {
-        val c = connectionMaker.makeConnection()
+        this.c = connectionMaker.makeConnection()
         val ps = c.prepareStatement("select * from users where id = ?")
+
         ps.setString(1, id)
 
         val rs = ps.executeQuery()
