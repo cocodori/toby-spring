@@ -4,25 +4,24 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.ApplicationContext
-import org.springframework.context.support.ClassPathXmlApplicationContext
-import org.springframework.context.support.GenericXmlApplicationContext
 import org.springframework.dao.EmptyResultDataAccessException
-import org.springframework.test.annotation.DirtiesContext
-import org.springframework.test.context.ContextConfiguration
+import org.springframework.jdbc.datasource.SingleConnectionDataSource
 
-@SpringBootTest
-@ContextConfiguration(locations = ["/test-applicationContext.xml"])
 internal class UserDAOTest {
-    @Autowired
-    lateinit var context: ApplicationContext
     lateinit var dao: UserDAO
 
     @BeforeEach
     fun setUp() {
-        dao = context.getBean("userDAO", UserDAO::class.java)
+        dao = UserDAO()
+
+        val dataSource = SingleConnectionDataSource(
+            "jdbc:mysql://localhost/toby-testdb",
+            "root",
+            "",
+            true
+        )
+
+        dao.dataSource = dataSource
     }
 
     @Test
