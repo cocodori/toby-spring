@@ -2,18 +2,31 @@ package com.tobybook.ch01
 
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.ApplicationContext
 import org.springframework.context.support.ClassPathXmlApplicationContext
 import org.springframework.context.support.GenericXmlApplicationContext
 import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.test.annotation.DirtiesContext
+import org.springframework.test.context.ContextConfiguration
 
+@SpringBootTest
+@ContextConfiguration(locations = ["/test-applicationContext.xml"])
 internal class UserDAOTest {
+    @Autowired
+    lateinit var context: ApplicationContext
+    lateinit var dao: UserDAO
+
+    @BeforeEach
+    fun setUp() {
+        dao = context.getBean("userDAO", UserDAO::class.java)
+    }
 
     @Test
     fun getUserFailure() {
-        val context = GenericXmlApplicationContext("/applicationContext.xml")
-        val dao = context.getBean("userDAO", UserDAO::class.java)
-
         dao.deleteAll()
         assertThat(dao.getCount()).isEqualTo(0)
 
@@ -23,10 +36,6 @@ internal class UserDAOTest {
 
     @Test
     fun addAndGet() {
-        val context = ClassPathXmlApplicationContext("/applicationContext.xml")
-        val dao = context.getBean("userDAO", UserDAO::class.java)
-
-
         dao.deleteAll()
         assertThat(dao.getCount()).isEqualTo(0)
 
