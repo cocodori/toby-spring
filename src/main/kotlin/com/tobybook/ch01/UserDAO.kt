@@ -7,7 +7,7 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import javax.sql.DataSource
 
-class UserDAO {
+abstract class UserDAO {
     lateinit var dataSource: DataSource
 
     fun add(user: User) {
@@ -74,7 +74,7 @@ class UserDAO {
 
         try {
             c = dataSource.connection
-            ps = c.prepareStatement("delete from users")
+            ps = makeStatement(c)
 
             ps?.executeUpdate()
         } catch (e: SQLException) {
@@ -105,8 +105,7 @@ class UserDAO {
             if (ps != null) { try { ps.close() } catch (e: SQLException) { } }
             if (c != null) { try { c.close() } catch (e: SQLException) { } }
         }
-
-
-
     }
+
+    abstract fun makeStatement(c: Connection): PreparedStatement
 }
