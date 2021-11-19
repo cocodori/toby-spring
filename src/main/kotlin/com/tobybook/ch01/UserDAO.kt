@@ -1,5 +1,7 @@
 package com.tobybook.ch01
 
+import com.tobybook.ch01.strategy.AddStatement
+import com.tobybook.ch01.strategy.DeleteAllStatement
 import org.springframework.dao.EmptyResultDataAccessException
 import java.sql.Connection
 import java.sql.PreparedStatement
@@ -11,24 +13,20 @@ class UserDAO {
     lateinit var dataSource: DataSource
 
     fun add(user: User) {
-        var c: Connection? = null
-        var ps: PreparedStatement? = null
+        val st = object : StatementStrategy {
+            override fun makePreparedStatement(c: Connection): PreparedStatement {
+                val ps =
+                    c.prepareStatement("insert intop users(id, name, password) values (?, ?, ?)")
 
-        try {
-            c = dataSource.connection
-            ps = c.prepareStatement("insert into users(id, name, password) values(?, ?, ?)")
+                ps.setString(1, user.id)
+                ps.setString(2, user.name)
+                ps.setString(3, user.password)
 
-            ps.setString(1, user.id)
-            ps.setString(2, user.name)
-            ps.setString(3, user.password)
-
-            ps.executeUpdate()
-        } catch(e: SQLException) {
-            throw e
-        } finally {
-            if (ps != null) { try { ps.close() } catch (e: SQLException) { } }
-            if (c != null) { try { c.close() } catch (e: SQLException) { } }
+                return ps
+            }
         }
+
+        jdbcContextWithStatementStrategy(st)
     }
 
     fun get(id: String): User {
@@ -69,13 +67,21 @@ class UserDAO {
     }
 
     fun deleteAll() {
+        val st = object : StatementStrategy {
+            override fun makePreparedStatement(c: Connection): PreparedStatement =
+                c.prepareStatement("delete from users")
+        }
+
+        jdbcContextWithStatementStrategy(st)
+    }
+
+    fun jdbcContextWithStatementStrategy(stmt: StatementStrategy) {
         var c: Connection? = null
         var ps: PreparedStatement? = null
 
         try {
             c = dataSource.connection
-            val strategy = DeleteAllStatement()
-            ps = strategy.makePreparedStatement(c)
+            ps = stmt.makePreparedStatement(c)
 
             ps.executeUpdate()
         } catch (e: SQLException) {
