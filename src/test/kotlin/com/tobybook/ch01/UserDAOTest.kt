@@ -12,8 +12,6 @@ internal class UserDAOTest {
 
     @BeforeEach
     fun setUp() {
-        dao = UserDAO()
-
         val dataSource = SingleConnectionDataSource(
             "jdbc:mysql://localhost/toby-testdb",
             "root",
@@ -21,11 +19,7 @@ internal class UserDAOTest {
             true
         )
 
-        val jdbcContext = JdbcContext()
-        jdbcContext.dataSource = dataSource
-
-        dao.dataSource = dataSource
-        dao.jdbcContext = jdbcContext
+        dao = UserDAO(dataSource)
     }
 
     @Test

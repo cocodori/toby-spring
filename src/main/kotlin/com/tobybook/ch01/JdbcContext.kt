@@ -5,9 +5,9 @@ import java.sql.PreparedStatement
 import java.sql.SQLException
 import javax.sql.DataSource
 
-class JdbcContext{
-    lateinit var dataSource: DataSource
-
+class JdbcContext(
+    var dataSource: DataSource
+){
     fun workWithStatementStrategy(stmt: StatementStrategy) {
         var c: Connection? = null
         var ps: PreparedStatement? = null

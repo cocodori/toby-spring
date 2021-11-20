@@ -13,11 +13,5 @@
 
     <bean id="userDAO" class="com.tobybook.ch01.UserDAO">
         <property name="dataSource" ref="dataSource" />
-        <property name="jdbcContext" ref="jdbcContext" />
     </bean>
-
-    <bean id="jdbcContext" class="com.tobybook.ch01.JdbcContext">
-        <property name="dataSource" ref="dataSource" />
-    </bean>
-
 </beans>

@@ -7,9 +7,8 @@ import java.sql.ResultSet
 import java.sql.SQLException
 import javax.sql.DataSource
 
-class UserDAO {
-    lateinit var dataSource: DataSource
-    lateinit var jdbcContext: JdbcContext
+class UserDAO(var dataSource: DataSource) {
+    var jdbcContext = JdbcContext(dataSource)
 
     fun add(user: User) {
         jdbcContext.workWithStatementStrategy(
