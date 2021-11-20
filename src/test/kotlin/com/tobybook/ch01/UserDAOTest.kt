@@ -21,7 +21,11 @@ internal class UserDAOTest {
             true
         )
 
+        val jdbcContext = JdbcContext()
+        jdbcContext.dataSource = dataSource
+
         dao.dataSource = dataSource
+        dao.jdbcContext = jdbcContext
     }
 
     @Test
