@@ -5,50 +5,52 @@ import java.io.FileReader
 import java.io.IOException
 
 class Calculator {
-    fun fileReadTemplate(
+
+    fun <T> lineReadTemplate(
         filepath: String,
-        callback: BufferedReaderCallback
-    ): Int {
+        callback: LineCallback<T>,
+        initVal: T
+    ): T {
         var br: BufferedReader? = null
 
-        try {
+        return try {
             br = BufferedReader(FileReader(filepath))
-            return callback.doSomethingWithReader(br)
+            var res: T = initVal
+            br.readLines().forEach { res = callback.doSomethingWithLine(it, res) }
+            return res
         } catch (e: IOException) {
-            println(e.message)
             throw e
         } finally {
-            if (br != null) {
-                try {
-                    br.close()
-                } catch (e: IOException) {
-                    println(e.message)
-                }
+
+        }
+    }
+
+    fun concatenate(filepath: String): String {
+        val concatnateCallback = object: LineCallback<String> {
+            override fun doSomethingWithLine(line: String, value: String): String {
+                return value + line
             }
         }
+
+        return lineReadTemplate(filepath, concatnateCallback, "")
     }
 
     fun calcSum(filepath: String): Int {
-        val sumCallback = object : BufferedReaderCallback {
-            override fun doSomethingWithReader(br: BufferedReader): Int {
-                var sum = 0
-                br.readLines().forEach { sum += it.toInt() }
-                return sum
+        val sumCallback = object : LineCallback<Int> {
+            override fun doSomethingWithLine(line: String, value: Int): Int {
+                return value + line.toInt()
             }
         }
-
-        return fileReadTemplate(filepath, sumCallback)
+        return lineReadTemplate(filepath, sumCallback, 0)
     }
 
     fun calcMultiply(filepath: String): Int {
-        val multiplyCallback = object: BufferedReaderCallback {
-            override fun doSomethingWithReader(br: BufferedReader): Int {
-                var multiply = 1;
-                br.readLines().forEach { multiply *= it.toInt() }
-                return multiply
+        val multiplyCallback = object: LineCallback<Int> {
+            override fun doSomethingWithLine(line: String, value: Int): Int {
+                return value * line.toInt()
             }
         }
 
-        return fileReadTemplate(filepath, multiplyCallback)
+        return lineReadTemplate(filepath, multiplyCallback, 1)
     }
 }

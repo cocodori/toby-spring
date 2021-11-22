@@ -24,4 +24,9 @@ class CalSumTest {
     fun multiplyOfNumbers() {
         assertThat(calculator.calcMultiply(numFilePath)).isEqualTo(24)
     }
+
+    @Test
+    fun concatenateStrings() {
+        assertThat(calculator.concatenate(numFilePath)).isEqualTo("1234")
+    }
 }
