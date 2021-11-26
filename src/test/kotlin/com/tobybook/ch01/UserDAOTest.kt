@@ -5,6 +5,7 @@ import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.dao.EmptyResultDataAccessException
+import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.SingleConnectionDataSource
 
 internal class UserDAOTest {
@@ -19,7 +20,7 @@ internal class UserDAOTest {
             true
         )
 
-        dao = UserDAO(dataSource)
+        dao = UserDAO(JdbcTemplate(dataSource))
     }
 
     @Test
