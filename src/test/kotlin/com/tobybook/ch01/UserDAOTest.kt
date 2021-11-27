@@ -1,6 +1,7 @@
 package com.tobybook.ch01
 
 import com.tobybook.ch04.UserDao
+import com.tobybook.ch05.Level
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -12,6 +13,10 @@ import org.springframework.jdbc.datasource.SingleConnectionDataSource
 
 internal class UserDAOTest {
     lateinit var dao: UserDao
+    lateinit var user1: User
+    lateinit var user2: User
+    lateinit var user3: User
+
 
     @BeforeEach
     fun setUp() {
@@ -23,6 +28,10 @@ internal class UserDAOTest {
         )
 
         dao = UserDaoJdbc(JdbcTemplate(dataSource))
+
+        user1 = User("gyu", "규", "1234", Level.BASIC, 1, 0)
+        user2 = User("hoon", "훈", "1234", Level.SILVER, 55, 10)
+        user3 = User("PaPa", "파파", "1234", Level.GOLD, 100, 40)
     }
 
     @Test
@@ -50,15 +59,11 @@ internal class UserDAOTest {
         dao.deleteAll()
         assertThat(dao.getCount()).isEqualTo(0)
 
-        val user = User("Arthur", "아떠", "pwpw")
+        val userget1 = dao.get(user1.id)
+        checkSameUser(userget1, user1)
 
-        dao.add(user)
-
-        val user2 = dao.get(user.id)
-
-        assertThat(dao.getCount()).isEqualTo(1)
-        assertThat(user2.name).isEqualTo(user.name)
-        assertThat(user2.password).isEqualTo(user.password)
+        val userget2 = dao.get(user2.id)
+        checkSameUser(userget2, user2)
     }
 
     @Test
@@ -68,10 +73,6 @@ internal class UserDAOTest {
         val users0 = dao.getAll()
 
         assertThat(users0.size).isEqualTo(0)
-
-        val user1 = User("1", "훈", "1234")
-        val user2 = User("2", "쮀", "1234")
-        val user3 = User("3", "얀", "1234")
 
         dao.add(user1)
         val users1: List<User> = dao.getAll()
@@ -96,5 +97,8 @@ internal class UserDAOTest {
         assertThat(user1.id).isEqualTo(user2.id)
         assertThat(user1.name).isEqualTo(user2.name)
         assertThat(user1.password).isEqualTo(user2.password)
+        assertThat(user1.level).isEqualTo(user2.level)
+        assertThat(user1.login).isEqualTo(user2.login)
+        assertThat(user1.recommend).isEqualTo(user2.recommend)
     }
 }

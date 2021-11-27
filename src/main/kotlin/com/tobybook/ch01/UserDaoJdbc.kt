@@ -1,6 +1,7 @@
 package com.tobybook.ch01
 
 import com.tobybook.ch04.UserDao
+import com.tobybook.ch05.Level
 import com.tobybook.exception.DuplicateUserIdException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.jdbc.core.JdbcTemplate
@@ -11,11 +12,15 @@ import java.sql.SQLException
 class UserDaoJdbc(
     private val jdbcTemplate: JdbcTemplate
 ): UserDao {
-    private val userMapper: (rs: ResultSet, rowNum: Int) -> User? = { rs, rowNum ->
+    private val userMapper: (rs: ResultSet, rowNum: Int) -> User? = { rs, _ ->
         User(
             rs.getString("id"),
             rs.getString("name"),
-            rs.getString("password")
+            rs.getString("password"),
+            Level.valueOf(rs.getInt("level")),
+            rs.getInt("login"),
+            rs.getInt("recommend")
+
         )
     }
 
@@ -24,7 +29,10 @@ class UserDaoJdbc(
             "insert into users(id, name, password) values(?, ? , ?)",
             user.id,
             user.name,
-            user.password
+            user.password,
+            user.level.value,
+            user.login,
+            user.recommend
         )
     }
 
