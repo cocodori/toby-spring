@@ -1,5 +1,6 @@
 package com.tobybook.ch01
 
+import com.tobybook.ch04.UserDao
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
@@ -9,8 +10,8 @@ import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.SingleConnectionDataSource
 
 internal class UserDAOTest {
-    lateinit var dao: UserDAO
-
+    lateinit var dao: UserDao
+    
     @BeforeEach
     fun setUp() {
         val dataSource = SingleConnectionDataSource(
@@ -20,7 +21,7 @@ internal class UserDAOTest {
             true
         )
 
-        dao = UserDAO(JdbcTemplate(dataSource))
+        dao = UserDaoJdbc(JdbcTemplate(dataSource))
     }
 
     @Test

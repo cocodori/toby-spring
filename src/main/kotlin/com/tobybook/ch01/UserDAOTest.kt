@@ -4,7 +4,7 @@ import org.springframework.context.support.GenericXmlApplicationContext
 
 fun main() {
     val context = GenericXmlApplicationContext("/applicationContext.xml")
-    val dao = context.getBean("userDAO", UserDAO::class.java)
+    val dao = context.getBean("userDAO", UserDaoJdbc::class.java)
 
     val user = dao.get("hoon")
 
