@@ -5,13 +5,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.dao.EmptyResultDataAccessException
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.datasource.SingleConnectionDataSource
 
 internal class UserDAOTest {
     lateinit var dao: UserDao
-    
+
     @BeforeEach
     fun setUp() {
         val dataSource = SingleConnectionDataSource(
@@ -22,6 +23,17 @@ internal class UserDAOTest {
         )
 
         dao = UserDaoJdbc(JdbcTemplate(dataSource))
+    }
+
+    @Test
+    fun duplicateKey() {
+        dao.deleteAll()
+
+        dao.add(User("hp", "휴랫패커드", "ㅁㄴㅇㄹ"))
+
+        val actual = assertThatThrownBy { dao.add(User("hp", "휴랫패커드", "ㅁㄴㅇㄹ")) }
+
+        actual.isInstanceOf(DuplicateKeyException::class.java)
     }
 
     @Test

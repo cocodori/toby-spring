@@ -20,16 +20,12 @@ class UserDaoJdbc(
     }
 
     override fun add(user: User) {
-        try {
-            jdbcTemplate.update(
-                "insert into users(id, name, password) values(?, ? , ?)",
-                user.id,
-                user.name,
-                user.password
-            )
-        } catch (e: DuplicateKeyException) {
-            throw DuplicateUserIdException(e)
-        }
+        jdbcTemplate.update(
+            "insert into users(id, name, password) values(?, ? , ?)",
+            user.id,
+            user.name,
+            user.password
+        )
     }
 
     override fun get(id: String): User = jdbcTemplate.queryForObject<User>(
