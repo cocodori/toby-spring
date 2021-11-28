@@ -25,4 +25,8 @@ class UserService(
                 userDao.update(user)
         }
     }
+
+    fun add(user: User) {
+        userDao.add(user.also { it.level = Level.BASIC })
+    }
 }

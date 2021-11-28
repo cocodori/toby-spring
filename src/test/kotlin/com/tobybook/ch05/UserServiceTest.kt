@@ -52,4 +52,21 @@ internal class UserServiceTest {
         assertThat(userUpdate.level).isEqualTo(expectedLevel)
     }
 
+    @Test
+    fun add() {
+        userDao.deleteAll()
+
+        val userWithLevel = users[4]
+        val userWithoutLevel = users[0].also { it.level = Level.SILVER }
+
+        userService.add(userWithLevel)
+        userService.add(userWithoutLevel)
+
+        val userWithLevelRead = userDao.get(userWithLevel.id)
+        val userWithoutLevelRead = userDao.get(userWithoutLevel.id)
+
+        assertThat(userWithLevelRead.level).isEqualTo(userWithLevel.level)
+        assertThat(userWithoutLevelRead.level).isEqualTo(Level.BASIC)
+    }
+
 }
