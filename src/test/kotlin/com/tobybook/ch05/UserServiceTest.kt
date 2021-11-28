@@ -23,11 +23,11 @@ internal class UserServiceTest {
     @BeforeEach
     fun setUp() {
         users = listOf(
-            User("boo", "부", "pw1", Level.BASIC, 49, 0),
-            User("poo", "푸", "pw1", Level.BASIC, 50, 0),
-            User("woo", "우", "pw1", Level.SILVER, 60, 29),
-            User("zoo", "주", "pw1", Level.SILVER, 60, 30),
-            User("hoo", "후", "pw1", Level.GOLD, 100, 100),
+            User("boo", "부", "pw1", Level.BASIC, MIN_LOGIN_COUNT_FOR_SILVER - 1, 0),
+            User("poo", "푸", "pw1", Level.BASIC, MIN_LOGIN_COUNT_FOR_SILVER, 0),
+            User("woo", "우", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD-1),
+            User("zoo", "주", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD),
+            User("hoo", "후", "pw1", Level.GOLD, 100, Int.MAX_VALUE),
         )
     }
 
@@ -40,16 +40,19 @@ internal class UserServiceTest {
 
         userService.upgradeLevels()
 
-        checkLevel(users[0], Level.BASIC)
-        checkLevel(users[1], Level.SILVER)
-        checkLevel(users[2], Level.SILVER)
-        checkLevel(users[3], Level.GOLD)
-        checkLevel(users[4], Level.GOLD)
+        checkLevelUpgraded(users[0], false)
+        checkLevelUpgraded(users[1], true)
+        checkLevelUpgraded(users[2], false)
+        checkLevelUpgraded(users[3], true)
+        checkLevelUpgraded(users[4], false)
     }
 
-    private fun checkLevel(user: User, expectedLevel: Level) {
+    private fun checkLevelUpgraded(user: User, upgraded: Boolean) {
         val userUpdate = userDao.get(user.id)
-        assertThat(userUpdate.level).isEqualTo(expectedLevel)
+        if (upgraded)
+            assertThat(userUpdate.level).isEqualTo(user.level.next(user.level))
+        else
+            assertThat(userUpdate.level).isEqualByComparingTo(user.level)
     }
 
     @Test

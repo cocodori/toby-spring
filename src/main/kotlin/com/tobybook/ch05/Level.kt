@@ -1,7 +1,7 @@
 package com.tobybook.ch05
 
 enum class Level(
-    val value: Int
+    val value: Int,
 ) {
     BASIC(1),
     SILVER(2),
@@ -16,4 +16,11 @@ enum class Level(
                 else -> throw IllegalArgumentException()
             }
     }
+
+    fun next(level: Level) =
+        when (level) {
+            BASIC -> SILVER
+            SILVER -> GOLD
+            else -> null
+        }
 }
