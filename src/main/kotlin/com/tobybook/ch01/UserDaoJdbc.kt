@@ -2,16 +2,16 @@ package com.tobybook.ch01
 
 import com.tobybook.ch04.UserDao
 import com.tobybook.ch05.Level
-import com.tobybook.exception.DuplicateUserIdException
-import org.springframework.dao.DuplicateKeyException
 import org.springframework.jdbc.core.JdbcTemplate
 import org.springframework.jdbc.core.queryForObject
 import java.sql.ResultSet
-import java.sql.SQLException
+import javax.sql.DataSource
 
 class UserDaoJdbc(
-    private val jdbcTemplate: JdbcTemplate
+    private val dataSource: DataSource
 ): UserDao {
+    var jdbcTemplate: JdbcTemplate = JdbcTemplate(dataSource)
+
     private val userMapper: (rs: ResultSet, rowNum: Int) -> User? = { rs, _ ->
         User(
             rs.getString("id"),
@@ -20,7 +20,6 @@ class UserDaoJdbc(
             Level.valueOf(rs.getInt("level")),
             rs.getInt("login"),
             rs.getInt("recommend")
-
         )
     }
 

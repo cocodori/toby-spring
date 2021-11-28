@@ -27,7 +27,7 @@ internal class UserDAOTest {
             true
         )
 
-        dao = UserDaoJdbc(JdbcTemplate(dataSource))
+        dao = UserDaoJdbc(dataSource)
 
         user1 = User("gyu", "규", "1234", Level.BASIC, 1, 0)
         user2 = User("hoon", "훈", "1234", Level.SILVER, 55, 10)
