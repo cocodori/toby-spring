@@ -35,6 +35,28 @@ internal class UserDAOTest {
     }
 
     @Test
+    fun update() {
+        dao.deleteAll()
+        dao.add(user1)
+        dao.add(user2)
+
+        user1.name = "김판호"
+        user1.password = "Harry"
+        user1.level = Level.GOLD
+        user1.login = 1000
+        user1.recommend = 9999
+
+        dao.update(user1)
+
+        val user1Update = dao.get(user1.id)
+
+        checkSameUser(user1, user1Update)
+
+        val user2Same = dao.get(user2.id)
+        checkSameUser(user2, user2Same)
+    }
+
+    @Test
     fun duplicateKey() {
         dao.deleteAll()
 
@@ -59,8 +81,12 @@ internal class UserDAOTest {
         dao.deleteAll()
         assertThat(dao.getCount()).isEqualTo(0)
 
+        dao.add(user1)
+
         val userget1 = dao.get(user1.id)
         checkSameUser(userget1, user1)
+
+        dao.add(user2)
 
         val userget2 = dao.get(user2.id)
         checkSameUser(userget2, user2)

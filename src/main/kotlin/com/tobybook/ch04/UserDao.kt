@@ -8,4 +8,5 @@ interface UserDao {
     fun getAll(): List<User>
     fun deleteAll()
     fun getCount(): Int
+    fun update(user: User)
 }

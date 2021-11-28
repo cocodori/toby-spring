@@ -26,7 +26,7 @@ class UserDaoJdbc(
 
     override fun add(user: User) {
         jdbcTemplate.update(
-            "insert into users(id, name, password) values(?, ? , ?)",
+            "insert into users(id, name, password, Level, Login, Recommend) values(?, ?, ?, ?, ?, ?)",
             user.id,
             user.name,
             user.password,
@@ -48,6 +48,24 @@ class UserDaoJdbc(
 
     override fun getCount(): Int =
         jdbcTemplate.queryForObject("select count(*) from users")
+
+    override fun update(user: User) {
+        jdbcTemplate.update(
+            "UPDATE users " +
+                    "SET name = ?," +
+                    "password = ?," +
+                    "level = ?," +
+                    "login = ?," +
+                    "recommend = ? " +
+                "WHERE id = ?",
+            user.name,
+            user.password,
+            user.level.value,
+            user.login,
+            user.recommend,
+            user.id
+        )
+    }
 
     override fun getAll(): List<User> {
         return jdbcTemplate.query(
