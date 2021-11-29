@@ -7,11 +7,11 @@ import com.tobybook.ch05.Level.*
 const val MIN_LOGIN_COUNT_FOR_SILVER = 50
 const val MIN_RECOMMEND_FOR_GOLD = 30
 
-class UserService(
+open class UserService(
     private val userDao: UserDao
 ) {
     fun upgradeLevels() {
-        val users: List<User> = userDao.getAll()
+        val users: List<User> = userDao.getAll().reversed()
 
         for (user in users) {
             if (canUpgradeLevel(user)) {
@@ -20,7 +20,7 @@ class UserService(
         }
     }
 
-    private fun upgradeLevel(user: User) {
+    open fun upgradeLevel(user: User) {
         user.upgradeLevel()
         userDao.update(user)
     }

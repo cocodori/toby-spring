@@ -3,8 +3,10 @@ package com.tobybook.ch05
 import com.tobybook.ch01.User
 import com.tobybook.ch04.UserDao
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
@@ -25,7 +27,7 @@ internal class UserServiceTest {
         users = listOf(
             User("boo", "부", "pw1", Level.BASIC, MIN_LOGIN_COUNT_FOR_SILVER - 1, 0),
             User("poo", "푸", "pw1", Level.BASIC, MIN_LOGIN_COUNT_FOR_SILVER, 0),
-            User("woo", "우", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD-1),
+            User("woo", "우", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD - 1),
             User("zoo", "주", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD),
             User("hoo", "후", "pw1", Level.GOLD, 100, Int.MAX_VALUE),
         )
@@ -52,7 +54,7 @@ internal class UserServiceTest {
         if (upgraded)
             assertThat(userUpdate.level).isEqualTo(user.level.next(user.level))
         else
-            assertThat(userUpdate.level).isEqualByComparingTo(user.level)
+            assertThat(userUpdate.level).isEqualTo(user.level)
     }
 
     @Test
@@ -71,5 +73,37 @@ internal class UserServiceTest {
         assertThat(userWithLevelRead.level).isEqualTo(userWithLevel.level)
         assertThat(userWithoutLevelRead.level).isEqualTo(Level.BASIC)
     }
+
+    inner class TestUserService(
+        private val id: String
+    ) : UserService(userDao) {
+
+        override fun upgradeLevel(user: User) {
+            if (user.id == this.id) throw TestUserServiceException()
+            super.upgradeLevel(user)
+        }
+    }
+
+    @Test
+    fun upgradeAllOrNothing() {
+        val testUserService: UserService = TestUserService(users[3].id)
+        userDao.deleteAll()
+
+        for (user in users)
+            userDao.add(user)
+
+        try {
+            testUserService.upgradeLevels()
+            fail("TestServiceException expected")
+        } catch (e: TestUserServiceException) {
+            e.printStackTrace()
+        }
+
+        checkLevelUpgraded(users[1], false)
+    }
+
+}
+
+class TestUserServiceException : RuntimeException() {
 
 }
