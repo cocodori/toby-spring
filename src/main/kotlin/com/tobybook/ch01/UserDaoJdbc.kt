@@ -19,19 +19,21 @@ class UserDaoJdbc(
             rs.getString("password"),
             Level.valueOf(rs.getInt("level")),
             rs.getInt("login"),
-            rs.getInt("recommend")
+            rs.getInt("recommend"),
+            rs.getString("email")
         )
     }
 
     override fun add(user: User) {
         jdbcTemplate.update(
-            "insert into users(id, name, password, Level, Login, Recommend) values(?, ?, ?, ?, ?, ?)",
+            "insert into users(id, name, password, Level, Login, Recommend, email) values(?, ?, ?, ?, ?, ?, ?)",
             user.id,
             user.name,
             user.password,
             user.level.value,
             user.login,
-            user.recommend
+            user.recommend,
+            user.email
         )
     }
 
@@ -55,13 +57,15 @@ class UserDaoJdbc(
                     "password = ?," +
                     "level = ?," +
                     "login = ?," +
-                    "recommend = ? " +
+                    "recommend = ?, " +
+                    "email = ? " +
                 "WHERE id = ?",
             user.name,
             user.password,
             user.level.value,
             user.login,
             user.recommend,
+            user.email,
             user.id
         )
     }

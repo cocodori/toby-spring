@@ -3,7 +3,6 @@ package com.tobybook.ch05
 import com.tobybook.ch01.User
 import com.tobybook.ch04.UserDao
 import com.tobybook.ch05.Level.*
-import org.springframework.jdbc.datasource.DataSourceTransactionManager
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionStatus
 import org.springframework.transaction.support.DefaultTransactionDefinition

@@ -9,7 +9,8 @@ class User(
     var password: String = "",
     var level: Level = Level.BASIC,
     var login: Int = 0,
-    var recommend: Int = 0
+    var recommend: Int = 0,
+    var email: String = ""
 ) {
     fun upgradeLevel() {
         if (level.next(level) == null)

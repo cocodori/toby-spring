@@ -29,9 +29,9 @@ internal class UserDAOTest {
 
         dao = UserDaoJdbc(dataSource)
 
-        user1 = User("gyu", "규", "1234", Level.BASIC, 1, 0)
-        user2 = User("hoon", "훈", "1234", Level.SILVER, 55, 10)
-        user3 = User("PaPa", "파파", "1234", Level.GOLD, 100, 40)
+        user1 = User("gyu", "규", "1234", Level.BASIC, 1, 0, "email@test.com")
+        user2 = User("hoon", "훈", "1234", Level.SILVER, 55, 10, "email2@test.com")
+        user3 = User("PaPa", "파파", "1234", Level.GOLD, 100, 40, "email3@test.com")
     }
 
     @Test
@@ -45,6 +45,7 @@ internal class UserDAOTest {
         user1.level = Level.GOLD
         user1.login = 1000
         user1.recommend = 9999
+        user1.email = "change@mail.com"
 
         dao.update(user1)
 
@@ -125,6 +126,6 @@ internal class UserDAOTest {
         assertThat(user1.password).isEqualTo(user2.password)
         assertThat(user1.level).isEqualTo(user2.level)
         assertThat(user1.login).isEqualTo(user2.login)
-        assertThat(user1.recommend).isEqualTo(user2.recommend)
+        assertThat(user1.email).isEqualTo(user2.email)
     }
 }
