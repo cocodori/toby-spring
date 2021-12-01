@@ -13,6 +13,7 @@
 
     <bean id="userService" class="com.tobybook.ch05.UserService">
         <constructor-arg ref="userDAO" />
+        <constructor-arg ref="dataSource" />
     </bean>
 
     <bean id="userDAO" class="com.tobybook.ch01.UserDaoJdbc">

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.fail
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.test.context.ContextConfiguration
+import javax.sql.DataSource
 
 @SpringBootTest
 @ContextConfiguration(locations = ["/test-applicationContext.xml"])
@@ -19,6 +20,9 @@ internal class UserServiceTest {
 
     @Autowired
     lateinit var userDao: UserDao
+
+    @Autowired
+    lateinit var dataSource: DataSource
 
     lateinit var users: List<User>
 
@@ -76,7 +80,7 @@ internal class UserServiceTest {
 
     inner class TestUserService(
         private val id: String
-    ) : UserService(userDao) {
+    ) : UserService(userDao, dataSource) {
 
         override fun upgradeLevel(user: User) {
             if (user.id == this.id) throw TestUserServiceException()
