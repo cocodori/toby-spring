@@ -16,7 +16,7 @@ const val MIN_RECOMMEND_FOR_GOLD = 30
 open class UserService(
     private val userDao: UserDao,
     private val transactionManager: PlatformTransactionManager,
-    private val mailSender: MailSender
+    var mailSender: MailSender
 ) {
     fun upgradeLevels() {
         val status: TransactionStatus =

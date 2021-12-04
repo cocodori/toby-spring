@@ -9,12 +9,27 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.mail.MailSender
+import org.springframework.mail.SimpleMailMessage
+import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.PlatformTransactionManager
 
 @SpringBootTest
 @ContextConfiguration(locations = ["/test-applicationContext.xml"])
 internal class UserServiceTest {
+    inner class MockMailSender(
+        val request: MutableList<String> = mutableListOf()
+    ): MailSender {
+        override fun send(simpleMessage: SimpleMailMessage) {
+            simpleMessage.to?.let { request.add(it[0]) }
+        }
+
+        override fun send(vararg simpleMessages: SimpleMailMessage?) {
+            TODO("Not yet implemented")
+        }
+
+    }
+
     @Autowired
     lateinit var userService: UserService
 
@@ -41,12 +56,15 @@ internal class UserServiceTest {
     }
 
     @Test
+    @DirtiesContext //컨텍스트의 DI 설정을 변경하는 테스트라는 것을 알려준다
     fun upgradeLevels() {
         userDao.deleteAll()
 
         for (user in users)
             userDao.add(user)
 
+        val mockMailSender = MockMailSender()
+        userService.mailSender = mockMailSender
         userService.upgradeLevels()
 
         checkLevelUpgraded(users[0], false)
@@ -54,6 +72,11 @@ internal class UserServiceTest {
         checkLevelUpgraded(users[2], false)
         checkLevelUpgraded(users[3], true)
         checkLevelUpgraded(users[4], false)
+
+        val request = mockMailSender.request
+        assertThat(request.size).isEqualTo(2)
+        assertThat(request[0]).isEqualTo(users[1].email)
+        assertThat(request[1]).isEqualTo(users[3].email)
     }
 
     private fun checkLevelUpgraded(user: User, upgraded: Boolean) {
