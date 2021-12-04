@@ -8,6 +8,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.mail.MailSender
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.PlatformTransactionManager
 
@@ -22,6 +23,9 @@ internal class UserServiceTest {
 
     @Autowired
     lateinit var transactionManager: PlatformTransactionManager
+
+    @Autowired
+    lateinit var mailSender: MailSender
 
     lateinit var users: List<User>
 
@@ -79,7 +83,7 @@ internal class UserServiceTest {
 
     inner class TestUserService(
         private val id: String
-    ) : UserService(userDao, transactionManager) {
+    ) : UserService(userDao, transactionManager, mailSender) {
 
         override fun upgradeLevel(user: User) {
             if (user.id == this.id) throw TestUserServiceException()

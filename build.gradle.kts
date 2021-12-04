@@ -22,6 +22,10 @@ dependencies {
 	implementation("org.jetbrains.kotlin:kotlin-reflect")
 	implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
 	implementation("org.springframework:spring-jdbc:5.3.12")
+	implementation("javax.mail:mail:1.4.7")
+	implementation("org.springframework.boot:spring-boot-starter-mail:2.6.1")
+
+
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
