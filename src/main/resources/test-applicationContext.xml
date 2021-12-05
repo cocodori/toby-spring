@@ -11,10 +11,14 @@
         <property name="password" value="" />
     </bean>
 
-    <bean id="userService" class="com.tobybook.ch05.UserService">
-        <constructor-arg ref="userDAO" />
+    <bean id="userService" class="com.tobybook.ch06.UserServiceTx">
         <constructor-arg ref="transactionManager" />
-        <constructor-arg ref="mailSender"/>
+        <constructor-arg ref="userServiceImpl" />
+    </bean>
+
+    <bean id="userServiceImpl" class="com.tobybook.ch05.UserServiceImpl">
+        <constructor-arg ref="userDAO"/>
+        <constructor-arg ref="mailSender" />
     </bean>
 
     <bean id="userDAO" class="com.tobybook.ch01.UserDaoJdbc">

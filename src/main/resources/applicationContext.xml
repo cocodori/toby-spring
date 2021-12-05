@@ -10,7 +10,7 @@
         <property name="username" value="root" />
         <property name="password" value="" />
     </bean>
-    <bean id="userService" class="com.tobybook.ch05.UserService">
+    <bean id="userService" class="com.tobybook.ch05.UserServiceImpl">
         <constructor-arg ref="userDAO" />
         <constructor-arg ref="transactionManager" />
     </bean>

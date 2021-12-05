@@ -2,6 +2,7 @@ package com.tobybook.ch05
 
 import com.tobybook.ch01.User
 import com.tobybook.ch04.UserDao
+import com.tobybook.ch06.UserServiceTx
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
@@ -31,7 +32,7 @@ internal class UserServiceTest {
     }
 
     @Autowired
-    lateinit var userService: UserService
+    lateinit var userService: UserServiceImpl
 
     @Autowired
     lateinit var userDao: UserDao
@@ -106,7 +107,7 @@ internal class UserServiceTest {
 
     inner class TestUserService(
         private val id: String
-    ) : UserService(userDao, transactionManager, mailSender) {
+    ) : UserServiceImpl(userDao, mailSender) {
 
         override fun upgradeLevel(user: User) {
             if (user.id == this.id) throw TestUserServiceException()
@@ -116,14 +117,16 @@ internal class UserServiceTest {
 
     @Test
     fun upgradeAllOrNothing() {
-        val testUserService: UserService = TestUserService(users[3].id)
+        val testUserService: UserServiceImpl = TestUserService(users[3].id)
+        val tx = UserServiceTx(testUserService, transactionManager)
+
         userDao.deleteAll()
 
         for (user in users)
             userDao.add(user)
 
         try {
-            testUserService.upgradeLevels()
+            tx.upgradeLevels()
             fail("TestServiceException expected")
         } catch (e: TestUserServiceException) {
             e.printStackTrace()
