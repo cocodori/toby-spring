@@ -14,6 +14,7 @@ import org.springframework.mail.SimpleMailMessage
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.PlatformTransactionManager
+import java.lang.UnsupportedOperationException
 
 @SpringBootTest
 @ContextConfiguration(locations = ["/test-applicationContext.xml"])
@@ -28,7 +29,19 @@ internal class UserServiceTest {
         override fun send(vararg simpleMessages: SimpleMailMessage?) {
             TODO("Not yet implemented")
         }
+    }
 
+    inner class MockUserDao(
+        var users: List<User>,
+        val updated: MutableList<User> = mutableListOf()
+    ): UserDao {
+        override fun add(user: User) { throw UnsupportedOperationException() }
+        override fun get(id: String): User { throw UnsupportedOperationException() }
+        override fun deleteAll() { throw UnsupportedOperationException() }
+        override fun getCount(): Int { throw UnsupportedOperationException() }
+
+        override fun getAll(): List<User> { return users }
+        override fun update(user: User) { updated.add(user) }
     }
 
     @Autowired
@@ -59,25 +72,27 @@ internal class UserServiceTest {
     @Test
     @DirtiesContext //컨텍스트의 DI 설정을 변경하는 테스트라는 것을 알려준다
     fun upgradeLevels() {
-        userDao.deleteAll()
-
-        for (user in users)
-            userDao.add(user)
-
+        val mockUserDao = MockUserDao(users)
         val mockMailSender = MockMailSender()
-        userService.mailSender = mockMailSender
-        userService.upgradeLevels()
+        val userServiceImpl = UserServiceImpl(mockUserDao, mockMailSender)
 
-        checkLevelUpgraded(users[0], false)
-        checkLevelUpgraded(users[1], true)
-        checkLevelUpgraded(users[2], false)
-        checkLevelUpgraded(users[3], true)
-        checkLevelUpgraded(users[4], false)
+        userServiceImpl.upgradeLevels()
+
+        val updated = mockUserDao.updated
+
+        assertThat(updated.size).isEqualTo(2)
+        checkUserAndLevel(updated[0], "poo", Level.SILVER)
+        checkUserAndLevel(updated[1], "zoo", Level.GOLD)
 
         val request = mockMailSender.request
         assertThat(request.size).isEqualTo(2)
         assertThat(request[0]).isEqualTo(users[1].email)
         assertThat(request[1]).isEqualTo(users[3].email)
+    }
+
+    private fun checkUserAndLevel(updated: User, expectedId: String, expectedLevel: Level) {
+        assertThat(updated.id).isEqualTo(expectedId)
+        assertThat(updated.level).isEqualTo(expectedLevel)
     }
 
     private fun checkLevelUpgraded(user: User, upgraded: Boolean) {

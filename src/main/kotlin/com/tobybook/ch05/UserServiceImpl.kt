@@ -18,7 +18,7 @@ open class UserServiceImpl(
     var mailSender: MailSender
 ) : UserService {
     override fun upgradeLevels() {
-        val users: List<User> = userDao.getAll().reversed()
+        val users: List<User> = userDao.getAll()
 
         for (user in users) {
             if (canUpgradeLevel(user)) {
