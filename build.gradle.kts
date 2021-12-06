@@ -24,6 +24,8 @@ dependencies {
 	implementation("org.springframework:spring-jdbc:5.3.12")
 	implementation("javax.mail:mail:1.4.7")
 	implementation("org.springframework.boot:spring-boot-starter-mail:2.6.1")
+	testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
+
 
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")

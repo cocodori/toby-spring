@@ -7,6 +7,9 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
+import org.mockito.Mockito.*
+import org.mockito.kotlin.anyOrNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.mail.MailSender
@@ -62,9 +65,9 @@ internal class UserServiceTest {
     fun setUp() {
         users = listOf(
             User("boo", "부", "pw1", Level.BASIC, MIN_LOGIN_COUNT_FOR_SILVER - 1, 0),
-            User("poo", "푸", "pw1", Level.BASIC, MIN_LOGIN_COUNT_FOR_SILVER, 0),
+            User("poo", "푸", "pw1", Level.BASIC, MIN_LOGIN_COUNT_FOR_SILVER, 0, "hoo@email.com"),
             User("woo", "우", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD - 1),
-            User("zoo", "주", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD),
+            User("zoo", "주", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD, "zzz@email.com"),
             User("hoo", "후", "pw1", Level.GOLD, 100, Int.MAX_VALUE),
         )
     }
@@ -88,6 +91,31 @@ internal class UserServiceTest {
         assertThat(request.size).isEqualTo(2)
         assertThat(request[0]).isEqualTo(users[1].email)
         assertThat(request[1]).isEqualTo(users[3].email)
+    }
+
+    @Test
+    fun mockUpgradeLevels() {
+        val mockUserDao = mock(UserDao::class.java)
+        val mockMailSender = mock(MailSender::class.java)
+
+        `when`(mockUserDao.getAll()).thenReturn(this.users)
+
+        val userServiceImpl = UserServiceImpl(mockUserDao, mockMailSender)
+
+        userServiceImpl.upgradeLevels()
+
+        verify(mockUserDao, times(2)).update(anyOrNull())
+        assertThat(users[1].level).isEqualTo(Level.SILVER)
+        assertThat(users[3].level).isEqualTo(Level.GOLD)
+
+        val mailMessageArg: ArgumentCaptor<SimpleMailMessage> =
+            ArgumentCaptor.forClass(SimpleMailMessage::class.java)
+
+        verify(mockMailSender, times(2))
+            .send(mailMessageArg.capture())
+        val mailMessages = mailMessageArg.allValues
+        assertThat(mailMessages[0].to?.get(0)).isEqualTo(users[1].email)
+        assertThat(mailMessages[1].to?.get(0)).isEqualTo(users[3].email)
     }
 
     private fun checkUserAndLevel(updated: User, expectedId: String, expectedLevel: Level) {
