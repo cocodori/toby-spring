@@ -1,5 +1,8 @@
 package com.tobybook.ch06.proxy
 
+import java.lang.reflect.InvocationHandler
+import java.lang.reflect.Method
+
 interface Hello {
     fun sayHello(name: String): String
     fun sayHi(name: String): String
@@ -17,6 +20,17 @@ class HelloTarget: Hello {
 
     override fun sayThankYou(name: String): String {
         return "Thank You $name"
+    }
+}
+
+class UppercaseHandler(
+    private val target: Any): InvocationHandler {
+    override fun invoke(proxy: Any?, method: Method?, args: Array<out Any>?): Any? {
+        val ret = method?.invoke(target, args)
+
+        return if (ret is String && method.name.startsWith("say"))
+            ret.uppercase()
+        else ret
     }
 }
 
