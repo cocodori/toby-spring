@@ -2,7 +2,8 @@ package com.tobybook.ch05
 
 import com.tobybook.ch01.User
 import com.tobybook.ch04.UserDao
-import com.tobybook.ch06.UserServiceTx
+import com.tobybook.ch06.TransactionHandler
+import com.tobybook.ch06.UserService
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
 import org.junit.jupiter.api.BeforeEach
@@ -17,7 +18,7 @@ import org.springframework.mail.SimpleMailMessage
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.PlatformTransactionManager
-import java.lang.UnsupportedOperationException
+import java.lang.reflect.Proxy
 
 @SpringBootTest
 @ContextConfiguration(locations = ["/test-applicationContext.xml"])
@@ -160,16 +161,24 @@ internal class UserServiceTest {
 
     @Test
     fun upgradeAllOrNothing() {
-        val testUserService: UserServiceImpl = TestUserService(users[3].id)
-        val tx = UserServiceTx(testUserService, transactionManager)
+        val testUserService: UserServiceImpl = TestUserService(users[1].id)
+        val txHandler =
+            TransactionHandler(testUserService, transactionManager, "upgradeLevels")
 
         userDao.deleteAll()
+
+        val txUserService = Proxy.newProxyInstance(
+            javaClass.classLoader,
+            arrayOf(UserService::class.java),
+            txHandler
+        ) as UserService
+
 
         for (user in users)
             userDao.add(user)
 
         try {
-            tx.upgradeLevels()
+            txUserService.upgradeLevels()
             fail("TestServiceException expected")
         } catch (e: TestUserServiceException) {
             e.printStackTrace()
