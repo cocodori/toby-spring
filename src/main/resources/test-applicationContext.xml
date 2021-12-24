@@ -11,9 +11,12 @@
         <property name="password" value="" />
     </bean>
 
-    <bean id="userService" class="com.tobybook.ch06.UserServiceTx">
-        <constructor-arg ref="transactionManager" />
-        <constructor-arg ref="userServiceImpl" />
+    <bean id="userService" class="com.tobybook.ch06.TxProxyFactoryBean">
+        <constructor-arg name="target" ref="userServiceImpl" />
+        <constructor-arg name="transactionManager" ref="transactionManager" />
+        <constructor-arg name="pattern" value="upgradeLevels" />
+        <constructor-arg name="serviceInterFace" value="com.tobybook.ch06.UserService" />
+
     </bean>
 
     <bean id="userServiceImpl" class="com.tobybook.ch05.UserServiceImpl">
@@ -30,4 +33,8 @@
     </bean>
 
     <bean id="mailSender" class="com.tobybook.ch05.DummyMailSender" />
+
+    <bean id="message" class="com.tobybook.ch06.MessageFactoryBean">
+        <constructor-arg value="Factory Bean" />
+    </bean>
 </beans>

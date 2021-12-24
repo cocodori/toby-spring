@@ -24,7 +24,8 @@ class HelloTarget: Hello {
 }
 
 class UppercaseHandler(
-    private val target: Any): InvocationHandler {
+    private val target: Any
+    ): InvocationHandler {
     override fun invoke(proxy: Any?, method: Method?, args: Array<out Any>?): Any? {
         val ret = method?.invoke(target, args)
 

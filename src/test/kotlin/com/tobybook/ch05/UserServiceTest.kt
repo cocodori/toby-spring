@@ -3,6 +3,7 @@ package com.tobybook.ch05
 import com.tobybook.ch01.User
 import com.tobybook.ch04.UserDao
 import com.tobybook.ch06.TransactionHandler
+import com.tobybook.ch06.TxProxyFactoryBean
 import com.tobybook.ch06.UserService
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
@@ -13,16 +14,23 @@ import org.mockito.Mockito.*
 import org.mockito.kotlin.anyOrNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.ApplicationContext
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.PlatformTransactionManager
 import java.lang.reflect.Proxy
+import java.time.LocalDateTime
+import java.util.*
 
 @SpringBootTest
 @ContextConfiguration(locations = ["/test-applicationContext.xml"])
 internal class UserServiceTest {
+
+    @Autowired
+    lateinit var context: ApplicationContext
+
     inner class MockMailSender(
         val request: MutableList<String> = mutableListOf()
     ): MailSender {
@@ -160,6 +168,7 @@ internal class UserServiceTest {
     }
 
     @Test
+    @DirtiesContext
     fun upgradeAllOrNothing() {
         val testUserService: UserServiceImpl = TestUserService(users[1].id)
         val txHandler =
@@ -167,12 +176,9 @@ internal class UserServiceTest {
 
         userDao.deleteAll()
 
-        val txUserService = Proxy.newProxyInstance(
-            javaClass.classLoader,
-            arrayOf(UserService::class.java),
-            txHandler
-        ) as UserService
-
+        val txProxyFactoryBean = context.getBean("&userService", TxProxyFactoryBean::class.java)
+        txProxyFactoryBean.target = testUserService
+        val txUserService = txProxyFactoryBean.`object` as UserService
 
         for (user in users)
             userDao.add(user)
@@ -185,6 +191,17 @@ internal class UserServiceTest {
         }
 
         checkLevelUpgraded(users[1], false)
+    }
+
+    @Test
+    fun reflectionAPITest() {
+        val date = Class.forName("java.util.Date").newInstance() as Date
+        println(date)
+
+
+        val date2 = Class.forName("java.util.Date").getDeclaredConstructor().newInstance() as Date
+
+        println(date2)
     }
 
 }
