@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.*
 import org.mockito.kotlin.anyOrNull
+import org.springframework.aop.framework.ProxyFactoryBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
@@ -171,13 +172,11 @@ internal class UserServiceTest {
     @DirtiesContext
     fun upgradeAllOrNothing() {
         val testUserService: UserServiceImpl = TestUserService(users[1].id)
-        val txHandler =
-            TransactionHandler(testUserService, transactionManager, "upgradeLevels")
 
         userDao.deleteAll()
 
-        val txProxyFactoryBean = context.getBean("&userService", TxProxyFactoryBean::class.java)
-        txProxyFactoryBean.target = testUserService
+        val txProxyFactoryBean = context.getBean("&userService", ProxyFactoryBean::class.java)
+        txProxyFactoryBean.setTarget(testUserService)
         val txUserService = txProxyFactoryBean.`object` as UserService
 
         for (user in users)

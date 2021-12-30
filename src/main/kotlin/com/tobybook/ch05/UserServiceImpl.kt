@@ -15,7 +15,7 @@ const val MIN_RECOMMEND_FOR_GOLD = 30
 
 open class UserServiceImpl(
     private val userDao: UserDao,
-    var mailSender: MailSender
+    private val mailSender: MailSender
 ) : UserService {
     override fun upgradeLevels() {
         val users: List<User> = userDao.getAll()
