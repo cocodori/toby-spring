@@ -54,4 +54,20 @@ open class UserServiceImpl(
     override fun add(user: User) {
         userDao.add(user.also { it.level = BASIC })
     }
+
+    override fun get(id: String): User {
+        return userDao.get(id)
+    }
+
+    override fun getAll(): List<User> {
+        return userDao.getAll()
+    }
+
+    override fun deleteAll() {
+        userDao.deleteAll()
+    }
+
+    override fun update(user: User) {
+        userDao.update(user)
+    }
 }

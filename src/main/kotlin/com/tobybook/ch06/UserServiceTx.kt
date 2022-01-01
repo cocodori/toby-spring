@@ -13,6 +13,22 @@ class UserServiceTx(
         userService.add(user)
     }
 
+    override fun get(id: String): User {
+        TODO("Not yet implemented")
+    }
+
+    override fun getAll(): List<User> {
+        TODO("Not yet implemented")
+    }
+
+    override fun deleteAll() {
+        TODO("Not yet implemented")
+    }
+
+    override fun update(user: User) {
+        TODO("Not yet implemented")
+    }
+
     override fun upgradeLevels() {
         val status = transactionManager.getTransaction(DefaultTransactionDefinition())
 

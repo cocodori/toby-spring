@@ -3,8 +3,7 @@ package com.tobybook.ch05
 import com.tobybook.ch01.User
 import com.tobybook.ch04.UserDao
 import com.tobybook.ch06.UserService
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.fail
+import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
@@ -13,6 +12,7 @@ import org.mockito.kotlin.anyOrNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
+import org.springframework.dao.TransientDataAccessResourceException
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.test.annotation.DirtiesContext
@@ -166,7 +166,20 @@ internal class UserServiceTest {
                 super.upgradeLevel(user)
                 if (user.id == "poo") throw TestUserServiceException()
             }
+
+            override fun getAll(): List<User> {
+                for(user in super.getAll()) {
+                    super.update(user)
+                }
+                return emptyList()
+            }
         }
+    }
+
+    @Test
+    fun readOnlyTransactionAttribute() {
+        val actual = assertThatThrownBy { testUserService.getAll() }
+        actual.isInstanceOf(TransientDataAccessResourceException::class.java)
     }
 
     @Test
