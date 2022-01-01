@@ -2,8 +2,6 @@ package com.tobybook.ch05
 
 import com.tobybook.ch01.User
 import com.tobybook.ch04.UserDao
-import com.tobybook.ch06.TransactionHandler
-import com.tobybook.ch06.TxProxyFactoryBean
 import com.tobybook.ch06.UserService
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.fail
@@ -12,7 +10,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.ArgumentCaptor
 import org.mockito.Mockito.*
 import org.mockito.kotlin.anyOrNull
-import org.springframework.aop.framework.ProxyFactoryBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.context.ApplicationContext
@@ -22,15 +19,11 @@ import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.PlatformTransactionManager
 import java.lang.reflect.Proxy
-import java.time.LocalDateTime
 import java.util.*
 
 @SpringBootTest
 @ContextConfiguration(locations = ["/test-applicationContext.xml"])
 internal class UserServiceTest {
-
-    @Autowired
-    lateinit var context: ApplicationContext
 
     inner class MockMailSender(
         val request: MutableList<String> = mutableListOf()
@@ -58,7 +51,13 @@ internal class UserServiceTest {
     }
 
     @Autowired
-    lateinit var userService: UserServiceImpl
+    lateinit var context: ApplicationContext
+
+    @Autowired
+    lateinit var testUserService: UserService
+
+    @Autowired
+    lateinit var userService: UserService
 
     @Autowired
     lateinit var userDao: UserDao
@@ -158,32 +157,32 @@ internal class UserServiceTest {
         assertThat(userWithoutLevelRead.level).isEqualTo(Level.BASIC)
     }
 
-    inner class TestUserService(
-        private val id: String
-    ) : UserServiceImpl(userDao, mailSender) {
-
-        override fun upgradeLevel(user: User) {
-            if (user.id == this.id) throw TestUserServiceException()
-            super.upgradeLevel(user)
+    companion object {
+        class TestUserServiceImpl(
+            userDao: UserDao,
+            mailSender: MailSender
+        ): UserServiceImpl(userDao, mailSender) {
+            override fun upgradeLevel(user: User) {
+                super.upgradeLevel(user)
+                if (user.id == "poo") throw TestUserServiceException()
+            }
         }
     }
 
     @Test
-    @DirtiesContext
+    fun advisorAutoProxyCreator() {
+        assertThat(testUserService).isInstanceOf(Proxy::class.java)
+    }
+
+    @Test
     fun upgradeAllOrNothing() {
-        val testUserService: UserServiceImpl = TestUserService(users[1].id)
-
         userDao.deleteAll()
-
-        val txProxyFactoryBean = context.getBean("&userService", ProxyFactoryBean::class.java)
-        txProxyFactoryBean.setTarget(testUserService)
-        val txUserService = txProxyFactoryBean.`object` as UserService
 
         for (user in users)
             userDao.add(user)
 
         try {
-            txUserService.upgradeLevels()
+            testUserService.upgradeLevels()
             fail("TestServiceException expected")
         } catch (e: TestUserServiceException) {
             e.printStackTrace()

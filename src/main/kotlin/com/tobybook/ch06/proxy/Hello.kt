@@ -9,7 +9,7 @@ interface Hello {
     fun sayThankYou(name: String): String
 }
 
-class HelloTarget: Hello {
+open class HelloTarget: Hello {
     override fun sayHello(name: String): String {
         return "Hello $name"
     }

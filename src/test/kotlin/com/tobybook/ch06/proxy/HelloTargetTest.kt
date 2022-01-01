@@ -4,12 +4,48 @@ import org.aopalliance.intercept.MethodInterceptor
 import org.aopalliance.intercept.MethodInvocation
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.springframework.aop.Pointcut
 import org.springframework.aop.framework.ProxyFactoryBean
 import org.springframework.aop.support.DefaultPointcutAdvisor
 import org.springframework.aop.support.NameMatchMethodPointcut
 import java.lang.reflect.Proxy
 
 internal class HelloTargetTest {
+
+    @Test
+    fun classNamePointcutAdvisor() {
+        //포인트컷 준비
+        val classMethodPointcut = NameMatchMethodPointcut()
+
+        classMethodPointcut.setClassFilter { clazz -> clazz.simpleName.startsWith("HelloT") }
+        classMethodPointcut.setMappedName("sayH*")
+
+        //테스트
+        checkAdviced(HelloTarget(), classMethodPointcut, true)
+
+        class HelloWorld: HelloTarget() {}
+        checkAdviced(HelloWorld(), classMethodPointcut, false)
+
+        class HelloToon: HelloTarget() {}
+        checkAdviced(HelloToon(), classMethodPointcut, true)
+    }
+
+    private fun checkAdviced(target: Any, pointcut: Pointcut, adviced: Boolean) {
+        val proxyFactoryBean = ProxyFactoryBean()
+        proxyFactoryBean.setTarget(target)
+        proxyFactoryBean.addAdvisor(DefaultPointcutAdvisor(pointcut, UppercaseAdvice()))
+        val proxiedHello = proxyFactoryBean.`object` as Hello
+
+        if (adviced) {
+            assertThat(proxiedHello.sayHello("Hoon")).isEqualTo("HELLO HOON")
+            assertThat(proxiedHello.sayHi("Hoon")).isEqualTo("HI HOON")
+            assertThat(proxiedHello.sayThankYou("Hoon")).isEqualTo("Thank You Hoon")
+        } else {
+            assertThat(proxiedHello.sayHello("Hoon")).isEqualTo("Hello Hoon")
+            assertThat(proxiedHello.sayHi("Hoon")).isEqualTo("Hi Hoon")
+            assertThat(proxiedHello.sayThankYou("Hoon")).isEqualTo("Thank You Hoon")
+        }
+    }
 
     @Test
     fun pointcutAdvisor() {
