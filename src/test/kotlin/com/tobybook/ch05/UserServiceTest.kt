@@ -18,6 +18,9 @@ import org.springframework.mail.SimpleMailMessage
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.TransactionStatus
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.DefaultTransactionDefinition
 import java.lang.reflect.Proxy
 import java.util.*
 
@@ -79,6 +82,22 @@ internal class UserServiceTest {
             User("zoo", "주", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD, "zzz@email.com"),
             User("hoo", "후", "pw1", Level.GOLD, 100, Int.MAX_VALUE),
         )
+    }
+
+    @Test
+    fun transactionSync() {
+        val txDefinition = DefaultTransactionDefinition()
+
+        txDefinition.isReadOnly = true
+
+        val txStatus: TransactionStatus = transactionManager.getTransaction(txDefinition)
+
+        userService.deleteAll()
+
+        userService.add(users[0])
+        userService.add(users[1])
+
+        transactionManager.commit(txStatus)
     }
 
     @Test
@@ -158,7 +177,7 @@ internal class UserServiceTest {
     }
 
     companion object {
-        class TestUserServiceImpl(
+        open class TestUserServiceImpl(
             userDao: UserDao,
             mailSender: MailSender
         ): UserServiceImpl(userDao, mailSender) {
@@ -167,6 +186,7 @@ internal class UserServiceTest {
                 if (user.id == "poo") throw TestUserServiceException()
             }
 
+            @Transactional(readOnly = true)
             override fun getAll(): List<User> {
                 for(user in super.getAll()) {
                     super.update(user)
@@ -178,6 +198,7 @@ internal class UserServiceTest {
 
     @Test
     fun readOnlyTransactionAttribute() {
+        testUserService.getAll()
         val actual = assertThatThrownBy { testUserService.getAll() }
         actual.isInstanceOf(TransientDataAccessResourceException::class.java)
     }

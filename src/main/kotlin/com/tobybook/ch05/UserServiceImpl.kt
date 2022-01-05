@@ -8,6 +8,7 @@ import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionStatus
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.DefaultTransactionDefinition
 
 const val MIN_LOGIN_COUNT_FOR_SILVER = 50
@@ -59,6 +60,7 @@ open class UserServiceImpl(
         return userDao.get(id)
     }
 
+    @Transactional(readOnly = true)
     override fun getAll(): List<User> {
         return userDao.getAll()
     }

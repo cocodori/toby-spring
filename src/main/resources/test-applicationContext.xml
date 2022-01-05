@@ -37,20 +37,6 @@
         <constructor-arg value="Factory Bean" />
     </bean>
 
-<!--    <bean id="transactionAdvice" class="com.tobybook.ch06.TransactionAdvice">-->
-<!--        <constructor-arg ref="transactionManager"/>-->
-<!--    </bean>-->
-
-<!--    <bean id="transactionPointcut" class="com.tobybook.ch06.NameMatchClassMethodPointcut">-->
-<!--        <property name="mappedClassName" value="*ServiceImpl" />-->
-<!--        <property name="mappedName" value="upgrade*"/>-->
-<!--    </bean>-->
-
-<!--    <bean id="transactionAdvisor" class="org.springframework.aop.support.DefaultPointcutAdvisor">-->
-<!--        <property name="advice" ref="transactionAdvice"/>-->
-<!--        <property name="pointcut" ref="transactionPointcut"/>-->
-<!--    </bean>-->
-
     <bean id="testUserService"
           class="com.tobybook.ch05.UserServiceTest$Companion$TestUserServiceImpl" parent="userService" />
 
@@ -60,24 +46,10 @@
         <aop:advisor advice-ref="transactionAdvice" pointcut="bean(*Service)" />
     </aop:config>
 
-<!--    <bean id="transactionAdvice"-->
-<!--          class="org.springframework.transaction.interceptor.TransactionInterceptor">-->
-<!--        <property name="transactionManager" ref="transactionManager" />-->
-<!--        <property name="transactionAttributes">-->
-<!--            <props>-->
-<!--                <prop key="get*">PROPAGATION_REQUIRED,readonly,timeout_30</prop>-->
-<!--                <prop key="upgrade*">PROPAGATION_REQUIRES_NEW,ISOLATION_SERIALIZABLE</prop>-->
-<!--                <prop key="*">PROPAGATION_REQUIRED</prop>-->
-<!--            </props>-->
-<!--        </property>-->
-<!--    </bean>-->
-
     <tx:advice id="transactionAdvice">
         <tx:attributes>
-            <tx:method name="get*" propagation="REQUIRED" read-only="true" timeout="30" />
-<!--            <tx:method name="upgrade*" propagation="REQUIRES_NEW"-->
-<!--                       isolation="SERIALIZABLE" />-->
             <tx:method name="*" propagation="REQUIRED" />
         </tx:attributes>
     </tx:advice>
+    <tx:annotation-driven/>
 </beans>
