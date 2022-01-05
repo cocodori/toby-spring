@@ -3,7 +3,7 @@ import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 plugins {
 	id("org.springframework.boot") version "2.5.6"
 	id("io.spring.dependency-management") version "1.0.11.RELEASE"
-	kotlin("jvm") version "1.5.31"
+	id ("org.jetbrains.kotlin.jvm") version "1.6.10-RC"
 	kotlin("plugin.spring") version "1.5.31"
 }
 
@@ -25,6 +25,9 @@ dependencies {
 	implementation("javax.mail:mail:1.4.7")
 	implementation("org.springframework.boot:spring-boot-starter-mail:2.6.1")
 
+	testImplementation("org.mockito.kotlin:mockito-kotlin:4.0.0")
+	runtimeOnly("org.jetbrains.kotlin:kotlin-reflect:1.6.10")
+	runtimeOnly("org.aspectj:aspectjweaver:1.9.7")
 
 	testImplementation("org.springframework.boot:spring-boot-starter-test")
 }

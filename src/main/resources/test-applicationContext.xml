@@ -1,7 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop-3.0.xsd
+        http://www.springframework.org/schema/tx
+        http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
 
     <bean id="dataSource"
           class="org.springframework.jdbc.datasource.SimpleDriverDataSource">
@@ -11,10 +18,9 @@
         <property name="password" value="" />
     </bean>
 
-    <bean id="userService" class="com.tobybook.ch05.UserService">
-        <constructor-arg ref="userDAO" />
-        <constructor-arg ref="transactionManager" />
-        <constructor-arg ref="mailSender"/>
+    <bean id="userService" class="com.tobybook.ch05.UserServiceImpl">
+        <constructor-arg ref="userDAO"/>
+        <constructor-arg ref="mailSender" />
     </bean>
 
     <bean id="userDAO" class="com.tobybook.ch01.UserDaoJdbc">
@@ -26,4 +32,24 @@
     </bean>
 
     <bean id="mailSender" class="com.tobybook.ch05.DummyMailSender" />
+
+    <bean id="message" class="com.tobybook.ch06.MessageFactoryBean">
+        <constructor-arg value="Factory Bean" />
+    </bean>
+
+    <bean id="testUserService"
+          class="com.tobybook.ch05.UserServiceTest$Companion$TestUserServiceImpl" parent="userService" />
+
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator" />
+
+    <aop:config>
+        <aop:advisor advice-ref="transactionAdvice" pointcut="bean(*Service)" />
+    </aop:config>
+
+    <tx:advice id="transactionAdvice">
+        <tx:attributes>
+            <tx:method name="*" propagation="REQUIRED" />
+        </tx:attributes>
+    </tx:advice>
+    <tx:annotation-driven/>
 </beans>

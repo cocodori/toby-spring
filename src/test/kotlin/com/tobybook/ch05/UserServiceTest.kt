@@ -2,21 +2,32 @@ package com.tobybook.ch05
 
 import com.tobybook.ch01.User
 import com.tobybook.ch04.UserDao
-import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.Assertions.fail
+import com.tobybook.ch06.UserService
+import org.assertj.core.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentCaptor
+import org.mockito.Mockito.*
+import org.mockito.kotlin.anyOrNull
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.test.context.SpringBootTest
+import org.springframework.context.ApplicationContext
+import org.springframework.dao.TransientDataAccessResourceException
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
 import org.springframework.test.annotation.DirtiesContext
 import org.springframework.test.context.ContextConfiguration
 import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.TransactionStatus
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.DefaultTransactionDefinition
+import java.lang.reflect.Proxy
+import java.util.*
 
 @SpringBootTest
 @ContextConfiguration(locations = ["/test-applicationContext.xml"])
 internal class UserServiceTest {
+
     inner class MockMailSender(
         val request: MutableList<String> = mutableListOf()
     ): MailSender {
@@ -27,8 +38,26 @@ internal class UserServiceTest {
         override fun send(vararg simpleMessages: SimpleMailMessage?) {
             TODO("Not yet implemented")
         }
-
     }
+
+    inner class MockUserDao(
+        var users: List<User>,
+        val updated: MutableList<User> = mutableListOf()
+    ): UserDao {
+        override fun add(user: User) { throw UnsupportedOperationException() }
+        override fun get(id: String): User { throw UnsupportedOperationException() }
+        override fun deleteAll() { throw UnsupportedOperationException() }
+        override fun getCount(): Int { throw UnsupportedOperationException() }
+
+        override fun getAll(): List<User> { return users }
+        override fun update(user: User) { updated.add(user) }
+    }
+
+    @Autowired
+    lateinit var context: ApplicationContext
+
+    @Autowired
+    lateinit var testUserService: UserService
 
     @Autowired
     lateinit var userService: UserService
@@ -48,35 +77,78 @@ internal class UserServiceTest {
     fun setUp() {
         users = listOf(
             User("boo", "부", "pw1", Level.BASIC, MIN_LOGIN_COUNT_FOR_SILVER - 1, 0),
-            User("poo", "푸", "pw1", Level.BASIC, MIN_LOGIN_COUNT_FOR_SILVER, 0),
+            User("poo", "푸", "pw1", Level.BASIC, MIN_LOGIN_COUNT_FOR_SILVER, 0, "hoo@email.com"),
             User("woo", "우", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD - 1),
-            User("zoo", "주", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD),
+            User("zoo", "주", "pw1", Level.SILVER, 60, MIN_RECOMMEND_FOR_GOLD, "zzz@email.com"),
             User("hoo", "후", "pw1", Level.GOLD, 100, Int.MAX_VALUE),
         )
     }
 
     @Test
+    fun transactionSync() {
+        val txDefinition = DefaultTransactionDefinition()
+
+        txDefinition.isReadOnly = true
+
+        val txStatus: TransactionStatus = transactionManager.getTransaction(txDefinition)
+
+        userService.deleteAll()
+
+        userService.add(users[0])
+        userService.add(users[1])
+
+        transactionManager.commit(txStatus)
+    }
+
+    @Test
     @DirtiesContext //컨텍스트의 DI 설정을 변경하는 테스트라는 것을 알려준다
     fun upgradeLevels() {
-        userDao.deleteAll()
-
-        for (user in users)
-            userDao.add(user)
-
+        val mockUserDao = MockUserDao(users)
         val mockMailSender = MockMailSender()
-        userService.mailSender = mockMailSender
-        userService.upgradeLevels()
+        val userServiceImpl = UserServiceImpl(mockUserDao, mockMailSender)
 
-        checkLevelUpgraded(users[0], false)
-        checkLevelUpgraded(users[1], true)
-        checkLevelUpgraded(users[2], false)
-        checkLevelUpgraded(users[3], true)
-        checkLevelUpgraded(users[4], false)
+        userServiceImpl.upgradeLevels()
+
+        val updated = mockUserDao.updated
+
+        assertThat(updated.size).isEqualTo(2)
+        checkUserAndLevel(updated[0], "poo", Level.SILVER)
+        checkUserAndLevel(updated[1], "zoo", Level.GOLD)
 
         val request = mockMailSender.request
         assertThat(request.size).isEqualTo(2)
         assertThat(request[0]).isEqualTo(users[1].email)
         assertThat(request[1]).isEqualTo(users[3].email)
+    }
+
+    @Test
+    fun mockUpgradeLevels() {
+        val mockUserDao = mock(UserDao::class.java)
+        val mockMailSender = mock(MailSender::class.java)
+
+        `when`(mockUserDao.getAll()).thenReturn(this.users)
+
+        val userServiceImpl = UserServiceImpl(mockUserDao, mockMailSender)
+
+        userServiceImpl.upgradeLevels()
+
+        verify(mockUserDao, times(2)).update(anyOrNull())
+        assertThat(users[1].level).isEqualTo(Level.SILVER)
+        assertThat(users[3].level).isEqualTo(Level.GOLD)
+
+        val mailMessageArg: ArgumentCaptor<SimpleMailMessage> =
+            ArgumentCaptor.forClass(SimpleMailMessage::class.java)
+
+        verify(mockMailSender, times(2))
+            .send(mailMessageArg.capture())
+        val mailMessages = mailMessageArg.allValues
+        assertThat(mailMessages[0].to?.get(0)).isEqualTo(users[1].email)
+        assertThat(mailMessages[1].to?.get(0)).isEqualTo(users[3].email)
+    }
+
+    private fun checkUserAndLevel(updated: User, expectedId: String, expectedLevel: Level) {
+        assertThat(updated.id).isEqualTo(expectedId)
+        assertThat(updated.level).isEqualTo(expectedLevel)
     }
 
     private fun checkLevelUpgraded(user: User, upgraded: Boolean) {
@@ -104,19 +176,40 @@ internal class UserServiceTest {
         assertThat(userWithoutLevelRead.level).isEqualTo(Level.BASIC)
     }
 
-    inner class TestUserService(
-        private val id: String
-    ) : UserService(userDao, transactionManager, mailSender) {
+    companion object {
+        open class TestUserServiceImpl(
+            userDao: UserDao,
+            mailSender: MailSender
+        ): UserServiceImpl(userDao, mailSender) {
+            override fun upgradeLevel(user: User) {
+                super.upgradeLevel(user)
+                if (user.id == "poo") throw TestUserServiceException()
+            }
 
-        override fun upgradeLevel(user: User) {
-            if (user.id == this.id) throw TestUserServiceException()
-            super.upgradeLevel(user)
+            @Transactional(readOnly = true)
+            override fun getAll(): List<User> {
+                for(user in super.getAll()) {
+                    super.update(user)
+                }
+                return emptyList()
+            }
         }
     }
 
     @Test
+    fun readOnlyTransactionAttribute() {
+        testUserService.getAll()
+        val actual = assertThatThrownBy { testUserService.getAll() }
+        actual.isInstanceOf(TransientDataAccessResourceException::class.java)
+    }
+
+    @Test
+    fun advisorAutoProxyCreator() {
+        assertThat(testUserService).isInstanceOf(Proxy::class.java)
+    }
+
+    @Test
     fun upgradeAllOrNothing() {
-        val testUserService: UserService = TestUserService(users[3].id)
         userDao.deleteAll()
 
         for (user in users)
@@ -130,6 +223,17 @@ internal class UserServiceTest {
         }
 
         checkLevelUpgraded(users[1], false)
+    }
+
+    @Test
+    fun reflectionAPITest() {
+        val date = Class.forName("java.util.Date").newInstance() as Date
+        println(date)
+
+
+        val date2 = Class.forName("java.util.Date").getDeclaredConstructor().newInstance() as Date
+
+        println(date2)
     }
 
 }

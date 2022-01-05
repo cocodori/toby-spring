@@ -3,38 +3,28 @@ package com.tobybook.ch05
 import com.tobybook.ch01.User
 import com.tobybook.ch04.UserDao
 import com.tobybook.ch05.Level.*
+import com.tobybook.ch06.UserService
 import org.springframework.mail.MailSender
 import org.springframework.mail.SimpleMailMessage
-import org.springframework.mail.javamail.JavaMailSenderImpl
 import org.springframework.transaction.PlatformTransactionManager
 import org.springframework.transaction.TransactionStatus
+import org.springframework.transaction.annotation.Transactional
 import org.springframework.transaction.support.DefaultTransactionDefinition
 
 const val MIN_LOGIN_COUNT_FOR_SILVER = 50
 const val MIN_RECOMMEND_FOR_GOLD = 30
 
-open class UserService(
+open class UserServiceImpl(
     private val userDao: UserDao,
-    private val transactionManager: PlatformTransactionManager,
-    var mailSender: MailSender
-) {
-    fun upgradeLevels() {
-        val status: TransactionStatus =
-            transactionManager.getTransaction(DefaultTransactionDefinition())
+    private val mailSender: MailSender
+) : UserService {
+    override fun upgradeLevels() {
+        val users: List<User> = userDao.getAll()
 
-        try {
-            val users: List<User> = userDao.getAll().reversed()
-
-            for (user in users) {
-                if (canUpgradeLevel(user)) {
-                    upgradeLevel(user)
-                }
+        for (user in users) {
+            if (canUpgradeLevel(user)) {
+                upgradeLevel(user)
             }
-
-            transactionManager.commit(status)
-        } catch (e: Exception) {
-            transactionManager.rollback(status)
-            throw e
         }
     }
 
@@ -62,7 +52,24 @@ open class UserService(
         }
     }
 
-    fun add(user: User) {
+    override fun add(user: User) {
         userDao.add(user.also { it.level = BASIC })
+    }
+
+    override fun get(id: String): User {
+        return userDao.get(id)
+    }
+
+    @Transactional(readOnly = true)
+    override fun getAll(): List<User> {
+        return userDao.getAll()
+    }
+
+    override fun deleteAll() {
+        userDao.deleteAll()
+    }
+
+    override fun update(user: User) {
+        userDao.update(user)
     }
 }
